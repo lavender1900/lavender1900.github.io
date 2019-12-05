@@ -17,7 +17,8 @@
       <pubDate>Thu, 05 Dec 2019 17:55:25 +0800</pubDate>
       
       <guid>https://lavender1900.github.io/post/eulers-sieve/</guid>
-      <description>欧拉筛法的核心思想是只对每个数做一次筛去动作，为了做到这个就不能够像埃氏筛法暴力 i, 2i, 3i, 4i &amp;hellip;</description>
+      <description>欧拉筛法的核心思想是只对每个数做一次筛去动作，为了做到这个就不能够像埃氏筛法那样对每个数i都划去 i, 2i, 3i, 4i &amp;hellip;
+比如整数18 可以因式分解为 2 * 9 或 3 * 6， 这就重复筛了两次，欧拉筛法的做法是只对每个可以因式分解的合数做最小质因子的筛去动作, 因此对于18只会做 2 * 9型的筛去</description>
     </item>
     
   </channel>
