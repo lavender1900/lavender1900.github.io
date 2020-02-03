@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>G-量子变化</title>
-    <link>https://lavender1900.github.io/</link>
-    <description>Recent content on G-量子变化</description>
+    <title>Posts on G-量子变化</title>
+    <link>https://lavender1900.github.io/post/</link>
+    <description>Recent content in Posts on G-量子变化</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 28 Jan 2020 16:00:23 +0800</lastBuildDate>
     
-	<atom:link href="https://lavender1900.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://lavender1900.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -28,20 +28,6 @@
 OK，下面就开始主题 —— 从零编译Postgresql
  一. 配置文件 在src/tools/msvc目录下建立config.pl文件，下面贴一下我的配置文件内容给大家作个参考，大家根据自身情况调整就好了
 use warnings; our $config = { asserts =&amp;gt; 0, # --enable-cassert	 nls =&amp;gt; &amp;#34;C:\\MinGW&amp;#34;, # --enable-nls=&amp;lt;path&amp;gt; tcl =&amp;gt; &amp;#34;C:\\Tcl&amp;#34;, # --with-tcl=&amp;lt;path&amp;gt; perl =&amp;gt; &amp;#34;C:\\Perl&amp;#34;, # --with-perl python =&amp;gt; &amp;#34;C:\\Python\\Python38-32&amp;#34;, # --with-python=&amp;lt;path&amp;gt; openssl =&amp;gt; &amp;#34;C:\\openssl&amp;#34;, # --with-openssl=&amp;lt;path&amp;gt; krb5	=&amp;gt; &amp;#34;C:\\Program Files (x86)\\MIT\\Kerberos&amp;#34;, uuid =&amp;gt; &amp;#34;E:\\ossp_uuid&amp;#34;, # --with-ossp-uuid xml =&amp;gt; &amp;#34;E:\\libxml&amp;#34;, # --with-libxml=&amp;lt;path&amp;gt; xslt =&amp;gt; &amp;#34;E:\\libxslt&amp;#34;, # --with-libxslt=&amp;lt;path&amp;gt; iconv =&amp;gt; &amp;#34;C:\\MinGW&amp;#34;, # (not in configure, path to iconv) zlib =&amp;gt; &amp;#34;E:\\zlib-win32&amp;#34; # --with-zlib=&amp;lt;path&amp;gt; }; 1; 二.</description>
-    </item>
-    
-    <item>
-      <title>About</title>
-      <link>https://lavender1900.github.io/about/</link>
-      <pubDate>Thu, 16 Jan 2020 17:04:47 +0800</pubDate>
-      
-      <guid>https://lavender1900.github.io/about/</guid>
-      <description>想养只狗，然而人人反对。
-想去旅游，然而口袋没钱。
-想要放纵，然而不复少年。
-想起曾经，然而踽踽独行。
-想不通，时间总是悄悄留下伤痕。
-不想通。</description>
     </item>
     
   </channel>

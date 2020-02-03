@@ -3,12 +3,22 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://lavender1900.github.io/about/</loc>
-    <lastmod>2020-01-16T17:04:47+08:00</lastmod>
+    <loc>https://lavender1900.github.io/</loc>
+    <lastmod>2020-01-28T16:00:23+08:00</lastmod>
   </url>
   
   <url>
-    <loc>https://lavender1900.github.io/</loc>
+    <loc>https://lavender1900.github.io/post/</loc>
+    <lastmod>2020-01-28T16:00:23+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://lavender1900.github.io/compile_pg_9.6_with_vs2019_and_win10_sdk/</loc>
+    <lastmod>2020-01-28T16:00:23+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://lavender1900.github.io/about/</loc>
     <lastmod>2020-01-16T17:04:47+08:00</lastmod>
   </url>
   

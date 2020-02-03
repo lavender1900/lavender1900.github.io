@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Hugo 0.62.2" />
+  <link rel="stylesheet" href="https://lavender1900.github.io/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  
+  
+  
+  <link rel="stylesheet" href="https://lavender1900.github.io/css/cayman.87415a4997c8d6c666624ff26c8812f27f42b4cf5dc18c45fc8dcb0cd7d6d2f5.css">
+  
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" integrity="sha384-yFRtMMDnQtDRO8rLpMIKrtPCD5jdktao2TV19YiZYWMDkUR5GQZR/NOVTdquEx1j" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js" integrity="sha384-9Nhn55MVVN0/4OFx7EE5kpFBPsEMZxKTCnA+4fqDmg12eCTqGi6+BB2LjY8brQxJ" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+  <title>Windows下使用Visual Studio 2019和Win10 SDK编译Postgre Sql 9.6 | G-量子变化</title>
+</head>
+
+<body>
+  <section class="page-header">
+  <h1 class="project-name">
+    G-量子变化
+  </h1>
+  <h2 class="project-tagline">
+    念千古之悠悠, 独沧然而泣下
+  </h2>
+  <nav>
+    
+    
+      
+      
+      
+      
+      <a href="/" class="btn">Blog</a>
+    
+      
+      
+      
+      
+      <a href="/tags/" class="btn">Tags</a>
+    
+      
+      
+      
+      
+      <a href="/about/" class="btn">About</a>
+    
+  </nav>
+</section>
+
+  <section class="main-content">
+    
+  <h1>Windows下使用Visual Studio 2019和Win10 SDK编译Postgre Sql 9.6</h1>
+  <div>
+    
+    <strong>Publish date: </strong>2020-01-28
+  </div>
+  
+  
+  <blockquote>
+<p>新年马上就要到了，不知道正在看这篇文章的你是不是跟我一样，买了《数据库查询优化器的艺术》这本书，立下宏愿要横扫源码澄清玉宇，结果被&quot;从零编译Postgresql&quot;这个第一关小Boss按在地上狂虐呢？</p>
+<p>如果是的话，让我来手把手现场教学怎么反手虐Boss</p>
+</blockquote>
+<p>我选择的PG版本是9.6.10。各位请酌情选择自己看对眼的版本，我不保证其他版本能顺利编译哈。</p>
+<p>还有，我编译完成的PG是32位的，想要编译为64位的朋友这篇文章可能不适合你。</p>
+<p>打个比喻，按照官方文档从源码编译就像是走在平坦的大马路上，忽然你看到有个浅浅的水坑，自信的你微微一笑，依据文档指示踩了上去，然后整个人就淹没了。</p>
+<p>没错，编译源码是件很头痛的事情，因为文档里包含的内容太简单了，各位意外情况直接让人崩溃。尤其是像我这样一直浸淫在Java的程序员，对Windows平台下的编译许久不接触，直接上手比较困难，各种报错更是得花费相当的时间才能找到源头。故而，我决定发扬社会主义核心价值观，前人栽树后人乘凉，只求付出不求回报的原则，将我走过的弯路记录下来，为希望研究数据库源码的各位提供借鉴，极大提高各位的幸福指数和社会生产力。</p>
+<hr>
+<p>首先请各位参阅PG的<a href="https://www.postgresql.org/docs/10/install-windows-full.html">官方编译文档</a> ，至少你得知道有哪些依赖以及必要的前置步骤。</p>
+<p>然后我要告诉你，先别急着去找这些依赖，文档里记录的依赖有些是不正确的，更要命的是编译的时候不会报错，等到编译完成你会发现 — WTF? 程序为什么运行不起来:-(</p>
+<p>OK，下面就开始主题 —— 从零编译Postgresql</p>
+<hr>
+<h3 id="一-配置文件">一. 	配置文件</h3>
+<p>在<code>src/tools/msvc</code>目录下建立<code>config.pl</code>文件，下面贴一下我的配置文件内容给大家作个参考，大家根据自身情况调整就好了</p>
+<div class="highlight"><pre style=";-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">warnings</span>;
+
+<span style="color:#008000;font-weight:bold">our</span> <span style="color:#19177c">$</span><span style="color:#19177c">config</span> <span style="color:#666">=</span> {
+	asserts <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#666">0</span>,    <span style="color:#408080;font-style:italic"># --enable-cassert	</span>
+	nls       <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;C:\\MinGW&#34;</span>,    <span style="color:#408080;font-style:italic"># --enable-nls=&lt;path&gt;</span>
+	tcl       <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;C:\\Tcl&#34;</span>,    <span style="color:#408080;font-style:italic"># --with-tcl=&lt;path&gt;</span>
+	perl      <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;C:\\Perl&#34;</span>,    <span style="color:#408080;font-style:italic"># --with-perl</span>
+	python    <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;C:\\Python\\Python38-32&#34;</span>,    <span style="color:#408080;font-style:italic"># --with-python=&lt;path&gt;</span>
+	openssl   <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;C:\\openssl&#34;</span>,    <span style="color:#408080;font-style:italic"># --with-openssl=&lt;path&gt;</span>
+	krb5	  <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;C:\\Program Files (x86)\\MIT\\Kerberos&#34;</span>,
+	uuid      <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;E:\\ossp_uuid&#34;</span>,    <span style="color:#408080;font-style:italic"># --with-ossp-uuid</span>
+	xml       <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;E:\\libxml&#34;</span>,    <span style="color:#408080;font-style:italic"># --with-libxml=&lt;path&gt;</span>
+	xslt      <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;E:\\libxslt&#34;</span>,    <span style="color:#408080;font-style:italic"># --with-libxslt=&lt;path&gt;</span>
+	iconv     <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;C:\\MinGW&#34;</span>,    <span style="color:#408080;font-style:italic"># (not in configure, path to iconv)</span>
+	zlib      <span style="color:#666">=</span><span style="color:#666">&gt;</span> <span style="color:#ba2121">&#34;E:\\zlib-win32&#34;</span>      <span style="color:#408080;font-style:italic"># --with-zlib=&lt;path&gt;</span>
+};
+
+<span style="color:#666">1</span>;
+
+</code></pre></div><h3 id="二下载编译所需依赖">二.	下载编译所需依赖</h3>
+<p>其实Postgresql的外部依赖不多，这也极大地减轻了我的痛苦，因为对于C/C++来说，在Windows下并没有什么统一式的依赖库管理中心服务，缺了任何依赖都得自己去找。反观Linux，什么apt, pacman, yum给你整得明明白白的。</p>
+<p>必须的依赖有以下</p>
+<ol>
+<li>ActiveState Perl</li>
+<li>ActiveState TCL</li>
+<li>MinGW —— 包括Bison, Flex, Diff, Gettext等等，是Windows版的GNU工具集</li>
+<li>MIT Kerberos</li>
+<li>libxml2 &amp; libxslt</li>
+<li>openssl</li>
+<li>ossp-uuid</li>
+<li>Python</li>
+<li>zlib</li>
+<li>nasm汇编器</li>
+</ol>
+<p>下面按顺序说明各个依赖的注意事项</p>
+<h4 id="1activestate-perl-32位">1.ActiveState Perl (32位)</h4>
+<p>从官网上下载后直接安装，简单粗暴</p>
+<h4 id="2activestate-tcl-32位">2.ActiveState TCL (32位)</h4>
+<p>同上，简单粗暴</p>
+<h4 id="3mingw">3.MinGW</h4>
+<p>推荐大家下载 <a href="https://mirrors.tuna.tsinghua.edu.cn/osdn/mingw/68260/mingw-get-setup.exe">mingw-get-setup.exe</a> 安装程序，只需要在安装界面中的<code>Basic Setup</code>中选择<code>mingw-developer-toolkit-bin</code>就好啦。大家可能会奇怪，为什么不手动下载<code>bison flex gettext</code>呢？因为这个安装过程会把一些其他编译需要的，但文档却没提的依赖也一并搞定。</p>
+<p><img src="bison_flex_deps.png" alt=""></p>
+<p>最后点击左上角<code>Installation -&gt; Apply Changes</code> 完成！</p>
+<h4 id="4mit-kerberos">4.MIT Kerberos</h4>
+<p>下载后安装，简单粗暴</p>
+<h4 id="5-libxml2--libxslt">5. libxml2 &amp; libxslt</h4>
+<p>根据官网文档指示，下载后解压到你想保存的位置</p>
+<h4 id="6openssl">6.openssl</h4>
+<p>注意，这个地方比较坑，如果下载最新版本的openssl安装包，然后愉快地<code>install</code>后，你会发现编译过程一直报找不到<code>libeasy32.lib</code>和<code>ssleasy32.lib</code>的错误。</p>
+<p>为什么呢？这是因为从<code>openssl1.0.2k</code>版本开始这两个库的名字就分别改成了<code>libssl.lib</code>和<code>libcrypto.lib</code> ，库中的符号表也改了，所以把新版本的库名字改成以前的也不起作用，后面会报一大堆符号无法解析的错误。然后我只好下载了1.0.2k版本之前的源码编译了一份，大家想自己编译的话，请参阅源码目录中的<code>INSTALL.W32</code>文档。</p>
+<p>大家要是懒得编译我这里也提供现成的编译库<a href="https://pan.baidu.com/s/1vCPrK5BXEDe7i-PNI4hsfQ">百度云下载openssl依赖库</a>，提取码是<code>yh9q</code>。下载完成后解压到想要保存的位置就行了。</p>
+<h4 id="7-ossp-uuid">7. ossp-uuid</h4>
+<p>这个只有源码可供下载，其实编译也非常简单，VS直接打开<code>sln</code>文件，剩下的你们都懂。要是真的不会编译，我这里也给你提供现成的<a href="https://pan.baidu.com/s/1mQglBNfNbl8DLe7PiyEXVA">百度云下载ossp-uuid依赖库</a>，提取码是<code>f2ku</code>。</p>
+<h4 id="8-python">8. Python</h4>
+<p>下载后安装，简单粗暴</p>
+<h4 id="9-zlib">9. zlib</h4>
+<p>下载源码后编译得到<code>zlibwapi.lib</code>，然后继续编译PG，报找不到<code>zdll.lib</code>错误，内心OS：怎么都喜欢改自己库的名字？然后尝试着把<code>zlibwapi.lib</code>名字改成<code>zdll.lib</code>，哈哈，Postgresql编译通过。是不是为如此顺利感到开心？嘿嘿嘿&hellip;</p>
+<p>特别注意，这地方是血坑，官网中给的版本是不正确的，更要命的是编译出来的<code>zlibwapi.lib</code>的符号表是正确的，所以改名后编译PG可以顺利通过！但是当你欢天喜地的想要把postgresql跑起来时，<code>应用程序无法启动 0xc00007b</code>这个报错直接让你明白什么叫高潮。</p>
+<p>这种问题作为Java搬砖工的我不知道怎么排查，但我隐隐觉得还是跟<code>zdll.lib</code>有关，然后费了好多力气，终于发现有一个叫做<code>zlib-win32-x86</code>的东西！当时我真的是怒火中烧想要F**K写这个文档的人</p>
+<p><a href="https://nsis.sourceforge.io/mediawiki/images/c/ca/Zlib-1.2.7-win32-x86.zip">点我下载zlib-win32-x86.zip</a></p>
+<h4 id="10-nasm汇编器">10. nasm汇编器</h4>
+<p>官网下载后安装，简单粗暴</p>
+<h3 id="三-可怕的天坑">三. 可怕的天坑</h3>
+<p>这个部分我单独拿出来讲。</p>
+<p>当我成功完成第一次源码编译后，我打算写这篇文档给其他人参考。于是我删掉所有文件，所有的系统配置，重新从零开始编译，但是唯独有一个文档没有任何提及，而我在第一次编译中阴差阳错做对了的事情，在后续的编译中漏掉了，因为我彻底忘记了这个不起眼的小细节。</p>
+<p>总之后面就是各种报<code>_spec_base_yy</code>符号找不到之类的错误，经过分析我知道这个是以<code>.y</code>结尾的语法文件没有成功处理的结果。</p>
+<p>仔细观察输出窗口可以看到<code>bison</code>的报错<code>m4 subprocess failed</code>，又是好长时间的排查，终于我发现这个报错的意思不是<code>bison</code>调用<code>m4</code>出错，<strong>而是<code>bison</code>找不到<code>m4</code></strong>！很奇怪，在<code>MinGW\msys\1.0\bin</code>目录下的确是有<code>m4.exe</code>的，而且系统<code>path</code>里也加入了这个路径。</p>
+<p>最终我发现了原因，而且我也不知道为什么会需要这个细节。那就是需要在系统环境变量里额外加入名称为<code>M4</code>的变量，</p>
+<p>变量的值就是<code>MinGW\msys\1.0\bin\m4</code></p>
+<p><img src="additional_m4_variable.png" alt=""></p>
+<h3 id="四-修改过时的源码文件">四. 修改过时的源码文件</h3>
+<h4 id="1-出生未捷身先死--the-nmake-version-could-not-be-determined">1. 出生未捷身先死 —— <code>The nmake version could not be determined</code></h4>
+<p>自信满满地键入<code>build DEBUG</code>后回车，呃，报错了</p>
+<p><img src="unable_determine_vs_version.png" alt=""></p>
+<p>先唠叨下，有的事情啊，它很烦人，都2020年了，VS都把<code>Express版本</code>更名为<code>Community版本</code>了，你不上VS2019好意思？让我用VS2017那怎么可能呢！</p>
+<p>这就是用高版本VS编译低版本VS工程的难处，各种不兼容，不过好在这些都是可以解决的。</p>
+<p>请大家在<code>src/tools/msvc</code>目录下的<code>VSObjectFactory.pm</code>文件的<code>DetermineVisualStudioVersion</code>方法中，加入<code>return &quot;16.00&quot;</code></p>
+<p><img src="modify_vs_version.png" alt=""></p>
+<p>因为VS2019的主版本号是16。</p>
+<p>继续键入<code>build DEBUG</code></p>
+<h4 id="2-指定的解决方案debugx86无效">2. 指定的解决方案&quot;Debug|x86&quot;无效</h4>
+<p>在<code>src/tools/msvc</code>目录下的<code>build.pl</code>文件的第65行增加<code>/p:Platform=WIN32</code></p>
+<p><img src="specify_platform.png" alt=""></p>
+<p>继续键入<code>build DEBUG</code></p>
+<h4 id="3-the-build-tools-for-visual-studio-2017-cannot-be-found">3. The build tools for Visual Studio 2017 cannot be found</h4>
+<p><img src="project_vs_version_not_match.png" alt=""></p>
+<p>这个得分四步走</p>
+<h4 id="a-在srctoolsmsvc目录下的vsobjectfactorypm文件中将return-new-vs2017solution_改为return-new-vs2019solution_">a. 在<code>src/tools/msvc</code>目录下的<code>VSObjectFactory.pm</code>文件中将<code>return new VS2017Solution(@_)</code>改为<code>return new VS2019Solution(@_)</code></h4>
+<p><img src="modify_solution.png" alt=""></p>
+<h4 id="b-依然是vsobjectfactorypm文件将return-new-vc2017project_改为return-new-vc2019project_">b. 依然是<code>VSObjectFactory.pm</code>文件，将<code>return new VC2017Project(@_)</code>改为<code>return new VC2019Project(@_)</code></h4>
+<p><img src="modify_project.png" alt=""></p>
+<h4 id="c-在srctoolsmsvc目录下的solutionpm文件末尾新增如下内容">c. 在<code>src/tools/msvc</code>目录下的<code>Solution.pm</code>文件末尾<strong>新增</strong>如下内容</h4>
+<div class="highlight"><pre style=";-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#008000;font-weight:bold">package</span> <span style="color:#00f;font-weight:bold">VS2019Solution</span>;
+
+<span style="color:#408080;font-style:italic">#</span>
+<span style="color:#408080;font-style:italic"># Package that encapsulates a Visual Studio 2017 solution file</span>
+<span style="color:#408080;font-style:italic">#</span>
+
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">Carp</span>;
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">strict</span>;
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">warnings</span>;
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">base</span> <span style="color:#008000">qw(</span><span style="color:#008000">Solution</span><span style="color:#008000">)</span>;
+
+<span style="color:#008000;font-weight:bold">sub</span> <span style="color:#00f">new</span>
+{
+	<span style="color:#008000;font-weight:bold">my</span> <span style="color:#19177c">$</span><span style="color:#19177c">classname</span> <span style="color:#666">=</span> <span style="color:#008000">shift</span>;
+	<span style="color:#008000;font-weight:bold">my</span> <span style="color:#19177c">$</span><span style="color:#19177c">self</span>      <span style="color:#666">=</span> <span style="color:#19177c">$</span><span style="color:#19177c">classname</span><span style="color:#666">-</span><span style="color:#666">&gt;</span><span style="color:#00f;font-weight:bold">SUPER::</span>_new(<span style="color:#19177c">@</span><span style="color:#19177c">_</span>);
+	<span style="color:#008000">bless</span>(<span style="color:#19177c">$</span><span style="color:#19177c">self</span>, <span style="color:#19177c">$</span><span style="color:#19177c">classname</span>);
+
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{solutionFileVersion}        <span style="color:#666">=</span> <span style="color:#ba2121">&#39;12.00&#39;</span>;
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{vcver}                      <span style="color:#666">=</span> <span style="color:#ba2121">&#39;16.00&#39;</span>;
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{visualStudioName}           <span style="color:#666">=</span> <span style="color:#ba2121">&#39;Visual Studio 2019&#39;</span>;
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{VisualStudioVersion}        <span style="color:#666">=</span> <span style="color:#ba2121">&#39;15.0.26730.3&#39;</span>;
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{MinimumVisualStudioVersion} <span style="color:#666">=</span> <span style="color:#ba2121">&#39;10.0.40219.1&#39;</span>;
+
+	<span style="color:#008000;font-weight:bold">return</span> <span style="color:#19177c">$</span><span style="color:#19177c">self</span>;
+}
+</code></pre></div><h4 id="d-在srctoolsmsvc目录下的msbuildprojectpm文件末尾新增如下内容">d. 在<code>src/tools/msvc</code>目录下的<code>MSBuildProject.pm</code>文件末尾<strong>新增</strong>如下内容</h4>
+<div class="highlight"><pre style=";-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#008000;font-weight:bold">package</span> <span style="color:#00f;font-weight:bold">VC2019Project</span>;
+
+<span style="color:#408080;font-style:italic">#</span>
+<span style="color:#408080;font-style:italic"># Package that encapsulates a Visual C++ 2017 project file</span>
+<span style="color:#408080;font-style:italic">#</span>
+
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">strict</span>;
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">warnings</span>;
+<span style="color:#008000;font-weight:bold">use</span> <span style="color:#00f;font-weight:bold">base</span> <span style="color:#008000">qw(</span><span style="color:#008000">VC2012Project</span><span style="color:#008000">)</span>;
+
+<span style="color:#008000;font-weight:bold">sub</span> <span style="color:#00f">new</span>
+{
+	<span style="color:#008000;font-weight:bold">my</span> <span style="color:#19177c">$</span><span style="color:#19177c">classname</span> <span style="color:#666">=</span> <span style="color:#008000">shift</span>;
+	<span style="color:#008000;font-weight:bold">my</span> <span style="color:#19177c">$</span><span style="color:#19177c">self</span>      <span style="color:#666">=</span> <span style="color:#19177c">$</span><span style="color:#19177c">classname</span><span style="color:#666">-</span><span style="color:#666">&gt;</span><span style="color:#00f;font-weight:bold">SUPER::</span>_new(<span style="color:#19177c">@</span><span style="color:#19177c">_</span>);
+	<span style="color:#008000">bless</span>(<span style="color:#19177c">$</span><span style="color:#19177c">self</span>, <span style="color:#19177c">$</span><span style="color:#19177c">classname</span>);
+
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{vcver}           <span style="color:#666">=</span> <span style="color:#ba2121">&#39;16.00&#39;</span>;
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{PlatformToolset} <span style="color:#666">=</span> <span style="color:#ba2121">&#39;v142&#39;</span>;
+	<span style="color:#19177c">$</span><span style="color:#19177c">self</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>{ToolsVersion}    <span style="color:#666">=</span> <span style="color:#ba2121">&#39;16.0&#39;</span>;
+
+	<span style="color:#008000;font-weight:bold">return</span> <span style="color:#19177c">$</span><span style="color:#19177c">self</span>;
+}
+</code></pre></div><p>继续键入<code>build DEBUG</code></p>
+<h4 id="4-找不到libintllib的错误">4. 找不到libintl.lib的错误</h4>
+<p>各位到<a href="http://gnuwin32.sourceforge.net/packages">gnu win 32</a> 页面下载libintl的 <code>Developer Files</code>版本压缩文件，然后把lib文件解压到<code>MinGW\lib</code>目录下就好了</p>
+<h4 id="5-找不到iconvlib的错误">5. 找不到iconv.lib的错误</h4>
+<p>这个不要到gun win 32去下载，请下载 <a href="https://master.dl.sourceforge.net/project/gettext/libiconv-win32/1.7.0.1/libiconv-1.7-w32.bin.zip">libiconv-1.7-w32.bin.zip</a>，然后同样把lib文件解压到<code>MinGW\lib</code>目录下</p>
+<h4 id="6-locale_name的左侧部分指定未定义的结构__crt_locale_data-和-wchar2char用于调用的参数太少">6. &ldquo;locale_name&quot;的左侧部分指定未定义的结构__crt_locale_data 和 &ldquo;wchar2char&quot;用于调用的参数太少</h4>
+<p>这个是<code>Win10SDK</code>的问题，高版本的SDK把<code>__crt_locale_data</code>这个数据结构定义给移除了，详细信息大家可以参阅这个链接 <a href="https://github.com/AndrewWPhillips/HexEdit/issues/10">struct __crt_locale_data no longer defined in VS2015 / Windows SDK 10</a></p>
+<p>又是一番辛苦寻找，终于找到了这个数据结构的定义，大家请在<code>src\backend\utils\adt\pg_locale.c</code>文件中增加一行包含头文件的语句<code>#include &quot;utils/vs2019_compensation.h&quot;</code></p>
+<p><img src="vs2019_compensation.png" alt=""></p>
+<p>然后在<code>src\include\utils</code>目录下新建<code>vs2019_compensation.h</code>头文件，并粘贴以下内容</p>
+<div class="highlight"><pre style=";-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#008000;font-weight:bold">typedef</span> <span style="color:#008000;font-weight:bold">struct</span> localerefcount {
+	<span style="color:#b00040">char</span> <span style="color:#666">*</span>locale;
+	wchar_t <span style="color:#666">*</span>wlocale;
+	<span style="color:#b00040">int</span> <span style="color:#666">*</span>refcount;
+	<span style="color:#b00040">int</span> <span style="color:#666">*</span>wrefcount;
+}
+locrefcount;
+<span style="color:#408080;font-style:italic">//From VS2012.
+</span><span style="color:#408080;font-style:italic"></span><span style="color:#008000;font-weight:bold">typedef</span> <span style="color:#008000;font-weight:bold">struct</span> __crt_locale_data {
+	<span style="color:#b00040">int</span> refcount;
+	<span style="color:#b00040">unsigned</span> <span style="color:#b00040">int</span> lc_codepage;
+	<span style="color:#b00040">unsigned</span> <span style="color:#b00040">int</span> lc_collate_cp;
+	<span style="color:#b00040">unsigned</span> <span style="color:#b00040">int</span> lc_time_cp;
+	locrefcount lc_category[<span style="color:#666">6</span>];
+	<span style="color:#b00040">int</span> lc_clike;
+	<span style="color:#b00040">int</span> mb_cur_max;
+	<span style="color:#b00040">int</span> <span style="color:#666">*</span> lconv_intl_refcount;
+	<span style="color:#b00040">int</span> <span style="color:#666">*</span> lconv_num_refcount;
+	<span style="color:#b00040">int</span> <span style="color:#666">*</span> lconv_mon_refcount;
+	<span style="color:#008000;font-weight:bold">struct</span> lconv <span style="color:#666">*</span> lconv;
+	<span style="color:#b00040">int</span> <span style="color:#666">*</span> ctype1_refcount;
+	<span style="color:#b00040">unsigned</span> <span style="color:#b00040">short</span> <span style="color:#666">*</span> ctype1;
+	<span style="color:#008000;font-weight:bold">const</span> <span style="color:#b00040">unsigned</span> <span style="color:#b00040">short</span> <span style="color:#666">*</span> pctype;
+	<span style="color:#008000;font-weight:bold">const</span> <span style="color:#b00040">unsigned</span> <span style="color:#b00040">char</span> <span style="color:#666">*</span> pclmap;
+	<span style="color:#008000;font-weight:bold">const</span> <span style="color:#b00040">unsigned</span> <span style="color:#b00040">char</span> <span style="color:#666">*</span> pcumap;
+	<span style="color:#008000;font-weight:bold">struct</span> __lc_time_data <span style="color:#666">*</span> lc_time_curr;
+	wchar_t <span style="color:#666">*</span> locale_name[<span style="color:#666">6</span>];
+}
+threadlocinfo;
+</code></pre></div><hr>
+<p>到了这里，想必各位已经成功编译了PG。</p>
+<p>2020的新年因为冠状病毒的疫情让大家都忐忑不安，真心祈祷疫情快些结束吧！</p>
+<p>最后希望在新的一年大家都能够身体健康，学有所长。</p>
+
+  
+
+  
+
+
+
+    <footer class="site-footer">
+  <span class="site-footer-credits">
+    Keep walking, keep thinking
+  </span>
+</footer>
+
+  </section>
+  
+  
+  <script>
+  window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+  ga('create', 'UA-123456789-1', 'auto');
+  ga('send', 'pageview');
+  </script>
+  <script async src='https://www.google-analytics.com/analytics.js'></script>
+  
+
+</body>
+</html>
